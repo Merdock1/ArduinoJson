@@ -77,18 +77,6 @@ inline bool CollectionData::copyFrom(const CollectionData& src,
   return true;
 }
 
-inline bool CollectionData::equalsObject(const CollectionData& other) const {
-  size_t count = 0;
-  for (VariantSlot* slot = _head; slot; slot = slot->next()) {
-    VariantData* v1 = slot->data();
-    VariantData* v2 = other.getMember(adaptString(slot->key()));
-    if (!variantEquals(v1, v2))
-      return false;
-    count++;
-  }
-  return count == other.size();
-}
-
 inline bool CollectionData::equalsArray(const CollectionData& other) const {
   VariantSlot* s1 = _head;
   VariantSlot* s2 = other._head;

@@ -31,7 +31,7 @@ TEST_CASE("JsonObject::operator==()") {
     REQUIRE_FALSE(obj1c == obj2c);
   }
 
-  SECTION("should return false when RKS has more elements") {
+  SECTION("should return false when RHS has more elements") {
     obj1["hello"] = "coucou";
     obj2["hello"] = "coucou";
     obj2["world"] = 666;

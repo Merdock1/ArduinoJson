@@ -102,7 +102,7 @@ struct ObjectComparer : ComparerBase {
   explicit ObjectComparer(const CollectionData &rhs) : _rhs(&rhs) {}
 
   CompareResult visitObject(const CollectionData &lhs) {
-    if (lhs.equalsObject(*_rhs))
+    if (ObjectConstRef(&lhs) == ObjectConstRef(_rhs))
       return COMPARE_RESULT_EQUAL;
     else
       return COMPARE_RESULT_DIFFER;

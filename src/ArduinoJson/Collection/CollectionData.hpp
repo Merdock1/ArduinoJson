@@ -58,8 +58,6 @@ class CollectionData {
   template <typename TAdaptedString>
   bool containsKey(const TAdaptedString &key) const;
 
-  bool equalsObject(const CollectionData &other) const;
-
   // Generic
 
   void clear();
