@@ -36,8 +36,6 @@ class CollectionData {
 
   void removeElement(size_t index);
 
-  bool equalsArray(const CollectionData &other) const;
-
   // Object only
 
   template <typename TAdaptedString, typename TStoragePolicy>

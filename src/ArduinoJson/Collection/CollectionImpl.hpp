@@ -77,21 +77,6 @@ inline bool CollectionData::copyFrom(const CollectionData& src,
   return true;
 }
 
-inline bool CollectionData::equalsArray(const CollectionData& other) const {
-  VariantSlot* s1 = _head;
-  VariantSlot* s2 = other._head;
-  for (;;) {
-    if (s1 == s2)
-      return true;
-    if (!s1 || !s2)
-      return false;
-    if (!variantEquals(s1->data(), s2->data()))
-      return false;
-    s1 = s1->next();
-    s2 = s2->next();
-  }
-}
-
 template <typename TAdaptedString>
 inline VariantSlot* CollectionData::getSlot(TAdaptedString key) const {
   if (key.isNull())
