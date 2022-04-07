@@ -201,8 +201,4 @@ CompareResult compare(const T1 &lhs, const T2 &rhs) {
   return lhs.accept(comparer);
 }
 
-inline int variantCompare(const VariantData *a, const VariantData *b) {
-  return compare(VariantConstRef(a), VariantConstRef(b));
-}
-
 }  // namespace ARDUINOJSON_NAMESPACE
