@@ -18,5 +18,8 @@
   },
   "search.exclude": {
     "/extras/tests/catch/*": true
-  }
+  },
+  "C_Cpp.default.includePath": [
+    "/src"
+  ]
 }
