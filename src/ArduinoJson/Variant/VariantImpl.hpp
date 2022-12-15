@@ -91,8 +91,7 @@ inline bool VariantData::copyFrom(const VariantData& src, MemoryPool* pool) {
       return toObject().copyFrom(src._content.asCollection, pool);
     case VALUE_IS_OWNED_STRING: {
       String value = src.asString();
-      return storeString(adaptString(value), pool,
-                         getStringStoragePolicy(value));
+      return setString(adaptString(value), pool);
     }
     case VALUE_IS_OWNED_RAW:
       return storeOwnedRaw(
@@ -105,38 +104,52 @@ inline bool VariantData::copyFrom(const VariantData& src, MemoryPool* pool) {
   }
 }
 
+template <typename TDerived>
+inline VariantRef VariantRefBase<TDerived>::add() const {
+  return VariantRef(getPool(), variantAddElement(getOrCreateData(), getPool()));
+}
+
+template <typename TDerived>
+inline VariantRef VariantRefBase<TDerived>::getVariant() const {
+  return VariantRef(getPool(), getData());
+}
+
+template <typename TDerived>
+inline VariantRef VariantRefBase<TDerived>::getOrCreateVariant() const {
+  return VariantRef(getPool(), getOrCreateData());
+}
+
+template <typename TDerived>
 template <typename T>
 inline typename enable_if<is_same<T, ArrayRef>::value, ArrayRef>::type
-VariantRef::to() const {
-  return ArrayRef(_pool, variantToArray(_data));
+VariantRefBase<TDerived>::to() const {
+  return ArrayRef(getPool(), variantToArray(getOrCreateData()));
 }
 
+template <typename TDerived>
 template <typename T>
 typename enable_if<is_same<T, ObjectRef>::value, ObjectRef>::type
-VariantRef::to() const {
-  return ObjectRef(_pool, variantToObject(_data));
+VariantRefBase<TDerived>::to() const {
+  return ObjectRef(getPool(), variantToObject(getOrCreateData()));
 }
 
+template <typename TDerived>
 template <typename T>
 typename enable_if<is_same<T, VariantRef>::value, VariantRef>::type
-VariantRef::to() const {
-  variantSetNull(_data);
+VariantRefBase<TDerived>::to() const {
+  variantSetNull(getOrCreateData());
   return *this;
 }
 
 // Out of class definition to avoid #1560
-inline bool VariantRef::set(char value) const {
+template <typename TDerived>
+inline bool VariantRefBase<TDerived>::set(char value) const {
   return set(static_cast<signed char>(value));
 }
 
-// TODO: move somewhere else
-template <typename TAdaptedString, typename TCallback>
-bool CopyStringStoragePolicy::store(TAdaptedString str, MemoryPool* pool,
-                                    TCallback callback) {
-  const char* copy = pool->saveString(str);
-  String storedString(copy, str.size(), String::Copied);
-  callback(storedString);
-  return copy != 0;
+template <typename TDerived>
+inline void convertToJson(const VariantRefBase<TDerived>& src, VariantRef dst) {
+  dst.set(src.template as<VariantConstRef>());
 }
 
 }  // namespace ARDUINOJSON_NAMESPACE

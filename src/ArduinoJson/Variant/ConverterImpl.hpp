@@ -5,8 +5,8 @@
 #pragma once
 
 #include <ArduinoJson/Json/JsonSerializer.hpp>
+#include <ArduinoJson/Variant/VariantConstRef.hpp>
 #include <ArduinoJson/Variant/VariantFunctions.hpp>
-#include <ArduinoJson/Variant/VariantRef.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
@@ -118,8 +118,7 @@ struct Converter<T, typename enable_if<is_floating_point<T>::value>::type>
 template <>
 struct Converter<const char*> : private VariantAttorney {
   static void toJson(const char* src, VariantRef dst) {
-    variantSetString(getData(dst), adaptString(src), getPool(dst),
-                     getStringStoragePolicy(src));
+    variantSetString(getData(dst), adaptString(src), getPool(dst));
   }
 
   static const char* fromJson(VariantConstRef src) {
@@ -136,8 +135,7 @@ struct Converter<const char*> : private VariantAttorney {
 template <>
 struct Converter<String> : private VariantAttorney {
   static void toJson(String src, VariantRef dst) {
-    variantSetString(getData(dst), adaptString(src), getPool(dst),
-                     getStringStoragePolicy(src));
+    variantSetString(getData(dst), adaptString(src), getPool(dst));
   }
 
   static String fromJson(VariantConstRef src) {
@@ -156,8 +154,7 @@ inline typename enable_if<IsString<T>::value, bool>::type convertToJson(
     const T& src, VariantRef dst) {
   VariantData* data = VariantAttorney::getData(dst);
   MemoryPool* pool = VariantAttorney::getPool(dst);
-  return variantSetString(data, adaptString(src), pool,
-                          getStringStoragePolicy(src));
+  return variantSetString(data, adaptString(src), pool);
 }
 
 template <>
@@ -310,15 +307,12 @@ inline bool canConvertFromJson(VariantConstRef src, const std::string_view&) {
 template <typename T>
 struct ConverterNeedsWriteableRef {
  protected:  // <- to avoid GCC's "all member functions in class are private"
-  typedef char Yes[1];
-  typedef char No[2];
-
-  static Yes& probe(T (*f)(VariantRef));
-  static No& probe(T (*f)(VariantConstRef));
+  static int probe(T (*f)(VariantRef));
+  static char probe(T (*f)(VariantConstRef));
 
  public:
   static const bool value =
-      sizeof(probe(Converter<T>::fromJson)) == sizeof(Yes);
+      sizeof(probe(Converter<T>::fromJson)) == sizeof(int);
 };
 
 }  // namespace ARDUINOJSON_NAMESPACE

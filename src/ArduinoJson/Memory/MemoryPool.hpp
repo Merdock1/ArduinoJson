@@ -14,6 +14,16 @@
 
 #define JSON_STRING_SIZE(SIZE) (SIZE + 1)
 
+// Returns the size (in bytes) of an array with n elements.
+// Can be very handy to determine the size of a StaticMemoryPool.
+#define JSON_ARRAY_SIZE(NUMBER_OF_ELEMENTS) \
+  ((NUMBER_OF_ELEMENTS) * sizeof(ARDUINOJSON_NAMESPACE::VariantSlot))
+
+// Returns the size (in bytes) of an object with n elements.
+// Can be very handy to determine the size of a StaticMemoryPool.
+#define JSON_OBJECT_SIZE(NUMBER_OF_ELEMENTS) \
+  ((NUMBER_OF_ELEMENTS) * sizeof(ARDUINOJSON_NAMESPACE::VariantSlot))
+
 namespace ARDUINOJSON_NAMESPACE {
 
 // _begin                                   _end
@@ -207,5 +217,36 @@ class MemoryPool {
   char *_begin, *_left, *_right, *_end;
   bool _overflowed;
 };
+
+template <typename TAdaptedString, typename TCallback>
+bool storeString(MemoryPool* pool, TAdaptedString str,
+                 StringStoragePolicy::Copy, TCallback callback) {
+  const char* copy = pool->saveString(str);
+  String storedString(copy, str.size(), String::Copied);
+  callback(storedString);
+  return copy != 0;
+}
+
+template <typename TAdaptedString, typename TCallback>
+bool storeString(MemoryPool*, TAdaptedString str, StringStoragePolicy::Link,
+                 TCallback callback) {
+  String storedString(str.data(), str.size(), String::Linked);
+  callback(storedString);
+  return !str.isNull();
+}
+
+template <typename TAdaptedString, typename TCallback>
+bool storeString(MemoryPool* pool, TAdaptedString str,
+                 StringStoragePolicy::LinkOrCopy policy, TCallback callback) {
+  if (policy.link)
+    return storeString(pool, str, StringStoragePolicy::Link(), callback);
+  else
+    return storeString(pool, str, StringStoragePolicy::Copy(), callback);
+}
+
+template <typename TAdaptedString, typename TCallback>
+bool storeString(MemoryPool* pool, TAdaptedString str, TCallback callback) {
+  return storeString(pool, str, str.storagePolicy(), callback);
+}
 
 }  // namespace ARDUINOJSON_NAMESPACE

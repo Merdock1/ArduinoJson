@@ -7,7 +7,7 @@
 #include <ArduinoJson/Polyfills/attributes.hpp>
 #include <ArduinoJson/Polyfills/type_traits.hpp>
 #include <ArduinoJson/Variant/VariantTo.hpp>
-#include "VariantRef.hpp"
+#include "VariantConstRef.hpp"
 
 namespace ARDUINOJSON_NAMESPACE {
 
@@ -17,16 +17,13 @@ class VariantAttorney {
   template <typename TClient>
   struct ResultOfGetData {
    protected:  // <- to avoid GCC's "all member functions in class are private"
-    typedef char Yes[1];
-    typedef char No[2];
-
-    static Yes& probe(const VariantData*);
-    static No& probe(VariantData*);
+    static int probe(const VariantData*);
+    static char probe(VariantData*);
 
     static TClient& client;
 
    public:
-    typedef typename conditional<sizeof(probe(client.getData())) == sizeof(Yes),
+    typedef typename conditional<sizeof(probe(client.getData())) == sizeof(int),
                                  const VariantData*, VariantData*>::type type;
   };
 

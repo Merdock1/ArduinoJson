@@ -4,21 +4,32 @@
 
 #pragma once
 
-#include <ArduinoJson/Object/ObjectFunctions.hpp>
-#include <ArduinoJson/Object/ObjectIterator.hpp>
-
-// Returns the size (in bytes) of an object with n elements.
-// Can be very handy to determine the size of a StaticMemoryPool.
-#define JSON_OBJECT_SIZE(NUMBER_OF_ELEMENTS) \
-  ((NUMBER_OF_ELEMENTS) * sizeof(ARDUINOJSON_NAMESPACE::VariantSlot))
+#include <ArduinoJson/Object/MemberProxy.hpp>
+#include <ArduinoJson/Object/ObjectConstRef.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
-template <typename TData>
-class ObjectRefBase {
+class ArrayRef;
+
+class ObjectRef : public VariantOperators<ObjectRef> {
   friend class VariantAttorney;
 
  public:
+  typedef ObjectIterator iterator;
+
+  FORCE_INLINE ObjectRef() : _data(0), _pool(0) {}
+  FORCE_INLINE ObjectRef(MemoryPool* buf, CollectionData* data)
+      : _data(data), _pool(buf) {}
+
+  operator VariantRef() const {
+    void* data = _data;  // prevent warning cast-align
+    return VariantRef(_pool, reinterpret_cast<VariantData*>(data));
+  }
+
+  operator ObjectConstRef() const {
+    return ObjectConstRef(_data);
+  }
+
   operator VariantConstRef() const {
     return VariantConstRef(collectionToVariant(_data));
   }
@@ -41,110 +52,6 @@ class ObjectRefBase {
 
   FORCE_INLINE size_t size() const {
     return _data ? _data->size() : 0;
-  }
-
- protected:
-  const VariantData* getData() const {
-    return collectionToVariant(_data);
-  }
-
-  ObjectRefBase(TData* data) : _data(data) {}
-  TData* _data;
-};
-
-class ObjectConstRef : public ObjectRefBase<const CollectionData>,
-                       public VariantOperators<ObjectConstRef> {
-  friend class ObjectRef;
-  typedef ObjectRefBase<const CollectionData> base_type;
-
- public:
-  typedef ObjectConstIterator iterator;
-
-  ObjectConstRef() : base_type(0) {}
-  ObjectConstRef(const CollectionData* data) : base_type(data) {}
-
-  FORCE_INLINE iterator begin() const {
-    if (!_data)
-      return iterator();
-    return iterator(_data->head());
-  }
-
-  FORCE_INLINE iterator end() const {
-    return iterator();
-  }
-
-  // containsKey(const std::string&) const
-  // containsKey(const String&) const
-  template <typename TString>
-  FORCE_INLINE bool containsKey(const TString& key) const {
-    return objectGetMember(_data, adaptString(key)) != 0;
-  }
-
-  // containsKey(char*) const
-  // containsKey(const char*) const
-  // containsKey(const __FlashStringHelper*) const
-  template <typename TChar>
-  FORCE_INLINE bool containsKey(TChar* key) const {
-    return objectGetMember(_data, adaptString(key)) != 0;
-  }
-
-  // operator[](const std::string&) const
-  // operator[](const String&) const
-  template <typename TString>
-  FORCE_INLINE
-      typename enable_if<IsString<TString>::value, VariantConstRef>::type
-      operator[](const TString& key) const {
-    return VariantConstRef(objectGetMember(_data, adaptString(key)));
-  }
-
-  // operator[](char*) const
-  // operator[](const char*) const
-  // operator[](const __FlashStringHelper*) const
-  template <typename TChar>
-  FORCE_INLINE
-      typename enable_if<IsString<TChar*>::value, VariantConstRef>::type
-      operator[](TChar* key) const {
-    return VariantConstRef(objectGetMember(_data, adaptString(key)));
-  }
-
-  FORCE_INLINE bool operator==(ObjectConstRef rhs) const {
-    if (_data == rhs._data)
-      return true;
-
-    if (!_data || !rhs._data)
-      return false;
-
-    size_t count = 0;
-    for (iterator it = begin(); it != end(); ++it) {
-      if (it->value() != rhs[it->key()])
-        return false;
-      count++;
-    }
-    return count == rhs.size();
-  }
-};
-
-class ObjectRef : public ObjectRefBase<CollectionData>,
-                  public ObjectShortcuts<ObjectRef>,
-                  public VariantOperators<ObjectRef> {
-  typedef ObjectRefBase<CollectionData> base_type;
-
-  friend class VariantAttorney;
-
- public:
-  typedef ObjectIterator iterator;
-
-  FORCE_INLINE ObjectRef() : base_type(0), _pool(0) {}
-  FORCE_INLINE ObjectRef(MemoryPool* buf, CollectionData* data)
-      : base_type(data), _pool(buf) {}
-
-  operator VariantRef() const {
-    void* data = _data;  // prevent warning cast-align
-    return VariantRef(_pool, reinterpret_cast<VariantData*>(data));
-  }
-
-  operator ObjectConstRef() const {
-    return ObjectConstRef(_data);
   }
 
   FORCE_INLINE iterator begin() const {
@@ -173,17 +80,31 @@ class ObjectRef : public ObjectRefBase<CollectionData>,
     return ObjectConstRef(_data) == ObjectConstRef(rhs._data);
   }
 
+  template <typename TString>
+  FORCE_INLINE typename enable_if<IsString<TString>::value,
+                                  MemberProxy<ObjectRef, TString> >::type
+  operator[](const TString& key) const {
+    return MemberProxy<ObjectRef, TString>(*this, key);
+  }
+
+  template <typename TChar>
+  FORCE_INLINE typename enable_if<IsString<TChar*>::value,
+                                  MemberProxy<ObjectRef, TChar*> >::type
+  operator[](TChar* key) const {
+    return MemberProxy<ObjectRef, TChar*>(*this, key);
+  }
+
   FORCE_INLINE void remove(iterator it) const {
     if (!_data)
       return;
-    _data->removeSlot(it.internal());
+    _data->removeSlot(it._slot);
   }
 
   // remove(const std::string&) const
   // remove(const String&) const
   template <typename TString>
   FORCE_INLINE void remove(const TString& key) const {
-    objectRemove(_data, adaptString(key));
+    removeMember(adaptString(key));
   }
 
   // remove(char*) const
@@ -191,10 +112,38 @@ class ObjectRef : public ObjectRefBase<CollectionData>,
   // remove(const __FlashStringHelper*) const
   template <typename TChar>
   FORCE_INLINE void remove(TChar* key) const {
-    objectRemove(_data, adaptString(key));
+    removeMember(adaptString(key));
   }
 
- protected:
+  template <typename TString>
+  FORCE_INLINE typename enable_if<IsString<TString>::value, bool>::type
+  containsKey(const TString& key) const {
+    return getMember(adaptString(key)) != 0;
+  }
+
+  template <typename TChar>
+  FORCE_INLINE typename enable_if<IsString<TChar*>::value, bool>::type
+  containsKey(TChar* key) const {
+    return getMember(adaptString(key)) != 0;
+  }
+
+  template <typename TString>
+  FORCE_INLINE ArrayRef createNestedArray(const TString& key) const;
+
+  template <typename TChar>
+  FORCE_INLINE ArrayRef createNestedArray(TChar* key) const;
+
+  template <typename TString>
+  ObjectRef createNestedObject(const TString& key) const {
+    return operator[](key).template to<ObjectRef>();
+  }
+
+  template <typename TChar>
+  ObjectRef createNestedObject(TChar* key) const {
+    return operator[](key).template to<ObjectRef>();
+  }
+
+ private:
   MemoryPool* getPool() const {
     return _pool;
   }
@@ -207,25 +156,22 @@ class ObjectRef : public ObjectRefBase<CollectionData>,
     return collectionToVariant(_data);
   }
 
- private:
+  template <typename TAdaptedString>
+  inline VariantData* getMember(TAdaptedString key) const {
+    if (!_data)
+      return 0;
+    return _data->getMember(key);
+  }
+
+  template <typename TAdaptedString>
+  void removeMember(TAdaptedString key) const {
+    if (!_data)
+      return;
+    _data->removeMember(key);
+  }
+
+  CollectionData* _data;
   MemoryPool* _pool;
-};
-
-template <>
-struct Converter<ObjectConstRef> : private VariantAttorney {
-  static void toJson(VariantConstRef src, VariantRef dst) {
-    variantCopyFrom(getData(dst), getData(src), getPool(dst));
-  }
-
-  static ObjectConstRef fromJson(VariantConstRef src) {
-    const VariantData* data = getData(src);
-    return data != 0 ? data->asObject() : 0;
-  }
-
-  static bool checkJson(VariantConstRef src) {
-    const VariantData* data = getData(src);
-    return data && data->isObject();
-  }
 };
 
 template <>
