@@ -80,7 +80,7 @@ TEST_CASE("Polyfills/type_traits") {
     CHECK(is_integral<const volatile unsigned long>::value == true);
     CHECK(is_integral<const volatile unsigned short>::value == true);
 
-    CHECK(is_integral<UInt>::value == true);
+    CHECK(is_integral<JsonUInt>::value == true);
   }
 
   SECTION("is_signed") {
@@ -181,16 +181,16 @@ TEST_CASE("Polyfills/type_traits") {
     CHECK((is_convertible<DeserializationError, JsonVariantConst>::value ==
            false));
     CHECK((is_convertible<JsonPair, JsonVariantConst>::value == false));
-    CHECK((is_convertible<VariantRef, JsonVariantConst>::value == true));
-    CHECK((is_convertible<VariantConstRef, JsonVariantConst>::value == true));
-    CHECK((is_convertible<ArrayRef, JsonVariantConst>::value == true));
-    CHECK((is_convertible<ElementProxy<ArrayRef>, JsonVariantConst>::value ==
+    CHECK((is_convertible<JsonVariant, JsonVariantConst>::value == true));
+    CHECK((is_convertible<JsonVariantConst, JsonVariantConst>::value == true));
+    CHECK((is_convertible<JsonArray, JsonVariantConst>::value == true));
+    CHECK((is_convertible<ElementProxy<JsonArray>, JsonVariantConst>::value ==
            true));
-    CHECK((is_convertible<ArrayConstRef, JsonVariantConst>::value == true));
-    CHECK((is_convertible<ObjectRef, JsonVariantConst>::value == true));
-    CHECK((is_convertible<MemberProxy<ObjectRef, const char*>,
+    CHECK((is_convertible<JsonArrayConst, JsonVariantConst>::value == true));
+    CHECK((is_convertible<JsonObject, JsonVariantConst>::value == true));
+    CHECK((is_convertible<MemberProxy<JsonObject, const char*>,
                           JsonVariantConst>::value == true));
-    CHECK((is_convertible<ObjectConstRef, JsonVariantConst>::value == true));
+    CHECK((is_convertible<JsonObjectConst, JsonVariantConst>::value == true));
     CHECK(
         (is_convertible<DynamicJsonDocument, JsonVariantConst>::value == true));
     CHECK((is_convertible<StaticJsonDocument<10>, JsonVariantConst>::value ==

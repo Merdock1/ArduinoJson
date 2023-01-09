@@ -14,8 +14,8 @@
 
 #define JSON_STRING_SIZE(SIZE) (SIZE + 1)
 
-// Returns the size (in bytes) of an array with n elements.
-// Can be very handy to determine the size of a StaticMemoryPool.
+// Computes the size required to store an array in a JsonDocument.
+// https://arduinojson.org/v6/how-to/determine-the-capacity-of-the-jsondocument/
 #define JSON_ARRAY_SIZE(NUMBER_OF_ELEMENTS) \
   ((NUMBER_OF_ELEMENTS) * sizeof(ARDUINOJSON_NAMESPACE::VariantSlot))
 
@@ -183,7 +183,8 @@ class MemoryPool {
         return next;
 
       // jump to next terminator
-      while (*next) ++next;
+      while (*next)
+        ++next;
     }
     return 0;
   }
@@ -222,7 +223,7 @@ template <typename TAdaptedString, typename TCallback>
 bool storeString(MemoryPool* pool, TAdaptedString str,
                  StringStoragePolicy::Copy, TCallback callback) {
   const char* copy = pool->saveString(str);
-  String storedString(copy, str.size(), String::Copied);
+  JsonString storedString(copy, str.size(), JsonString::Copied);
   callback(storedString);
   return copy != 0;
 }
@@ -230,7 +231,7 @@ bool storeString(MemoryPool* pool, TAdaptedString str,
 template <typename TAdaptedString, typename TCallback>
 bool storeString(MemoryPool*, TAdaptedString str, StringStoragePolicy::Link,
                  TCallback callback) {
-  String storedString(str.data(), str.size(), String::Linked);
+  JsonString storedString(str.data(), str.size(), JsonString::Linked);
   callback(storedString);
   return !str.isNull();
 }

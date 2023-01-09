@@ -58,7 +58,7 @@ class JsonSerializer : public Visitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visitFloat(Float value) {
+  size_t visitFloat(JsonFloat value) {
     _formatter.writeFloat(value);
     return bytesWritten();
   }
@@ -78,12 +78,12 @@ class JsonSerializer : public Visitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visitSignedInteger(Integer value) {
+  size_t visitSignedInteger(JsonInteger value) {
     _formatter.writeInteger(value);
     return bytesWritten();
   }
 
-  size_t visitUnsignedInteger(UInt value) {
+  size_t visitUnsignedInteger(JsonUInt value) {
     _formatter.writeInteger(value);
     return bytesWritten();
   }
@@ -115,23 +115,29 @@ class JsonSerializer : public Visitor<size_t> {
   TextFormatter<TWriter> _formatter;
 };
 
+// Produces a minified JSON document.
+// https://arduinojson.org/v6/api/json/serializejson/
 template <typename TDestination>
-size_t serializeJson(VariantConstRef source, TDestination& destination) {
+size_t serializeJson(JsonVariantConst source, TDestination& destination) {
   return serialize<JsonSerializer>(source, destination);
 }
 
-inline size_t serializeJson(VariantConstRef source, void* buffer,
+// Produces a minified JSON document.
+// https://arduinojson.org/v6/api/json/serializejson/
+inline size_t serializeJson(JsonVariantConst source, void* buffer,
                             size_t bufferSize) {
   return serialize<JsonSerializer>(source, buffer, bufferSize);
 }
 
-inline size_t measureJson(VariantConstRef source) {
+// Computes the length of the document that serializeJson() produces.
+// https://arduinojson.org/v6/api/json/measurejson/
+inline size_t measureJson(JsonVariantConst source) {
   return measure<JsonSerializer>(source);
 }
 
 #if ARDUINOJSON_ENABLE_STD_STREAM
 template <typename T>
-inline typename enable_if<is_convertible<T, VariantConstRef>::value,
+inline typename enable_if<is_convertible<T, JsonVariantConst>::value,
                           std::ostream&>::type
 operator<<(std::ostream& os, const T& source) {
   serializeJson(source, os);

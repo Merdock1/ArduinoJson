@@ -4,46 +4,46 @@
 
 #pragma once
 
-#include <ArduinoJson/Array/ArrayRef.hpp>
-#include <ArduinoJson/Object/ObjectRef.hpp>
+#include <ArduinoJson/Array/JsonArray.hpp>
+#include <ArduinoJson/Object/JsonObject.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
 template <typename TString>
-inline ArrayRef ObjectRef::createNestedArray(const TString& key) const {
-  return operator[](key).template to<ArrayRef>();
+inline JsonArray JsonObject::createNestedArray(const TString& key) const {
+  return operator[](key).template to<JsonArray>();
 }
 
 template <typename TChar>
-inline ArrayRef ObjectRef::createNestedArray(TChar* key) const {
-  return operator[](key).template to<ArrayRef>();
+inline JsonArray JsonObject::createNestedArray(TChar* key) const {
+  return operator[](key).template to<JsonArray>();
 }
 
 template <typename TDerived>
 template <typename TString>
-inline ArrayRef VariantRefBase<TDerived>::createNestedArray(
+inline JsonArray VariantRefBase<TDerived>::createNestedArray(
     const TString& key) const {
-  return operator[](key).template to<ArrayRef>();
+  return operator[](key).template to<JsonArray>();
 }
 
 template <typename TDerived>
 template <typename TChar>
-inline ArrayRef VariantRefBase<TDerived>::createNestedArray(TChar* key) const {
-  return operator[](key).template to<ArrayRef>();
+inline JsonArray VariantRefBase<TDerived>::createNestedArray(TChar* key) const {
+  return operator[](key).template to<JsonArray>();
 }
 
 template <typename TDerived>
 template <typename TString>
-inline ObjectRef VariantRefBase<TDerived>::createNestedObject(
+inline JsonObject VariantRefBase<TDerived>::createNestedObject(
     const TString& key) const {
-  return operator[](key).template to<ObjectRef>();
+  return operator[](key).template to<JsonObject>();
 }
 
 template <typename TDerived>
 template <typename TChar>
-inline ObjectRef VariantRefBase<TDerived>::createNestedObject(
+inline JsonObject VariantRefBase<TDerived>::createNestedObject(
     TChar* key) const {
-  return operator[](key).template to<ObjectRef>();
+  return operator[](key).template to<JsonObject>();
 }
 
 template <typename TDerived>

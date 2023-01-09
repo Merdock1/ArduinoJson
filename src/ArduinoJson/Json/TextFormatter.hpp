@@ -9,7 +9,7 @@
 
 #include <ArduinoJson/Json/EscapeSequence.hpp>
 #include <ArduinoJson/Numbers/FloatParts.hpp>
-#include <ArduinoJson/Numbers/Integer.hpp>
+#include <ArduinoJson/Numbers/JsonInteger.hpp>
 #include <ArduinoJson/Polyfills/assert.hpp>
 #include <ArduinoJson/Polyfills/attributes.hpp>
 #include <ArduinoJson/Polyfills/type_traits.hpp>
@@ -37,14 +37,16 @@ class TextFormatter {
   void writeString(const char* value) {
     ARDUINOJSON_ASSERT(value != NULL);
     writeRaw('\"');
-    while (*value) writeChar(*value++);
+    while (*value)
+      writeChar(*value++);
     writeRaw('\"');
   }
 
   void writeString(const char* value, size_t n) {
     ARDUINOJSON_ASSERT(value != NULL);
     writeRaw('\"');
-    while (n--) writeChar(*value++);
+    while (n--)
+      writeChar(*value++);
     writeRaw('\"');
   }
 

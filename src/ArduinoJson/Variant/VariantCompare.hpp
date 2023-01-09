@@ -52,20 +52,20 @@ struct Comparer<T, typename enable_if<is_integral<T>::value ||
 
   explicit Comparer(T value) : rhs(value) {}
 
-  CompareResult visitFloat(Float lhs) {
+  CompareResult visitFloat(JsonFloat lhs) {
     return arithmeticCompare(lhs, rhs);
   }
 
-  CompareResult visitSignedInteger(Integer lhs) {
+  CompareResult visitSignedInteger(JsonInteger lhs) {
     return arithmeticCompare(lhs, rhs);
   }
 
-  CompareResult visitUnsignedInteger(UInt lhs) {
+  CompareResult visitUnsignedInteger(JsonUInt lhs) {
     return arithmeticCompare(lhs, rhs);
   }
 
   CompareResult visitBoolean(bool lhs) {
-    return visitUnsignedInteger(static_cast<UInt>(lhs));
+    return visitUnsignedInteger(static_cast<JsonUInt>(lhs));
   }
 };
 
@@ -88,7 +88,7 @@ struct ArrayComparer : ComparerBase {
   explicit ArrayComparer(const CollectionData& rhs) : _rhs(&rhs) {}
 
   CompareResult visitArray(const CollectionData& lhs) {
-    if (ArrayConstRef(&lhs) == ArrayConstRef(_rhs))
+    if (JsonArrayConst(&lhs) == JsonArrayConst(_rhs))
       return COMPARE_RESULT_EQUAL;
     else
       return COMPARE_RESULT_DIFFER;
@@ -101,7 +101,7 @@ struct ObjectComparer : ComparerBase {
   explicit ObjectComparer(const CollectionData& rhs) : _rhs(&rhs) {}
 
   CompareResult visitObject(const CollectionData& lhs) {
-    if (ObjectConstRef(&lhs) == ObjectConstRef(_rhs))
+    if (JsonObjectConst(&lhs) == JsonObjectConst(_rhs))
       return COMPARE_RESULT_EQUAL;
     else
       return COMPARE_RESULT_DIFFER;
@@ -142,8 +142,8 @@ struct VariantComparer : ComparerBase {
     return accept(comparer);
   }
 
-  CompareResult visitFloat(Float lhs) {
-    Comparer<Float> comparer(lhs);
+  CompareResult visitFloat(JsonFloat lhs) {
+    Comparer<JsonFloat> comparer(lhs);
     return accept(comparer);
   }
 
@@ -157,13 +157,13 @@ struct VariantComparer : ComparerBase {
     return accept(comparer);
   }
 
-  CompareResult visitSignedInteger(Integer lhs) {
-    Comparer<Integer> comparer(lhs);
+  CompareResult visitSignedInteger(JsonInteger lhs) {
+    Comparer<JsonInteger> comparer(lhs);
     return accept(comparer);
   }
 
-  CompareResult visitUnsignedInteger(UInt lhs) {
-    Comparer<UInt> comparer(lhs);
+  CompareResult visitUnsignedInteger(JsonUInt lhs) {
+    Comparer<JsonUInt> comparer(lhs);
     return accept(comparer);
   }
 
@@ -194,14 +194,14 @@ struct VariantComparer : ComparerBase {
 
 template <typename T>
 struct Comparer<
-    T, typename enable_if<is_convertible<T, VariantConstRef>::value>::type>
+    T, typename enable_if<is_convertible<T, JsonVariantConst>::value>::type>
     : VariantComparer {
   explicit Comparer(const T& value)
       : VariantComparer(VariantAttorney::getData(value)) {}
 };
 
 template <typename T>
-CompareResult compare(VariantConstRef lhs, const T& rhs) {
+CompareResult compare(JsonVariantConst lhs, const T& rhs) {
   Comparer<T> comparer(rhs);
   return variantAccept(VariantAttorney::getData(lhs), comparer);
 }

@@ -4,12 +4,12 @@
 
 #pragma once
 
-#include <ArduinoJson/Array/ArrayRef.hpp>
+#include <ArduinoJson/Array/JsonArray.hpp>
 #include <ArduinoJson/Configuration.hpp>
 #include <ArduinoJson/Numbers/convertNumber.hpp>
 #include <ArduinoJson/Numbers/parseNumber.hpp>
-#include <ArduinoJson/Object/ObjectRef.hpp>
-#include <ArduinoJson/Variant/VariantRef.hpp>
+#include <ArduinoJson/Object/JsonObject.hpp>
+#include <ArduinoJson/Variant/JsonVariant.hpp>
 
 #include <string.h>  // for strcmp
 
@@ -70,16 +70,16 @@ inline T VariantData::asFloat() const {
   }
 }
 
-inline String VariantData::asString() const {
+inline JsonString VariantData::asString() const {
   switch (type()) {
     case VALUE_IS_LINKED_STRING:
-      return String(_content.asString.data, _content.asString.size,
-                    String::Linked);
+      return JsonString(_content.asString.data, _content.asString.size,
+                        JsonString::Linked);
     case VALUE_IS_OWNED_STRING:
-      return String(_content.asString.data, _content.asString.size,
-                    String::Copied);
+      return JsonString(_content.asString.data, _content.asString.size,
+                        JsonString::Copied);
     default:
-      return String();
+      return JsonString();
   }
 }
 
@@ -90,7 +90,7 @@ inline bool VariantData::copyFrom(const VariantData& src, MemoryPool* pool) {
     case VALUE_IS_OBJECT:
       return toObject().copyFrom(src._content.asCollection, pool);
     case VALUE_IS_OWNED_STRING: {
-      String value = src.asString();
+      JsonString value = src.asString();
       return setString(adaptString(value), pool);
     }
     case VALUE_IS_OWNED_RAW:
@@ -105,51 +105,47 @@ inline bool VariantData::copyFrom(const VariantData& src, MemoryPool* pool) {
 }
 
 template <typename TDerived>
-inline VariantRef VariantRefBase<TDerived>::add() const {
-  return VariantRef(getPool(), variantAddElement(getOrCreateData(), getPool()));
+inline JsonVariant VariantRefBase<TDerived>::add() const {
+  return JsonVariant(getPool(),
+                     variantAddElement(getOrCreateData(), getPool()));
 }
 
 template <typename TDerived>
-inline VariantRef VariantRefBase<TDerived>::getVariant() const {
-  return VariantRef(getPool(), getData());
+inline JsonVariant VariantRefBase<TDerived>::getVariant() const {
+  return JsonVariant(getPool(), getData());
 }
 
 template <typename TDerived>
-inline VariantRef VariantRefBase<TDerived>::getOrCreateVariant() const {
-  return VariantRef(getPool(), getOrCreateData());
+inline JsonVariant VariantRefBase<TDerived>::getOrCreateVariant() const {
+  return JsonVariant(getPool(), getOrCreateData());
 }
 
 template <typename TDerived>
 template <typename T>
-inline typename enable_if<is_same<T, ArrayRef>::value, ArrayRef>::type
+inline typename enable_if<is_same<T, JsonArray>::value, JsonArray>::type
 VariantRefBase<TDerived>::to() const {
-  return ArrayRef(getPool(), variantToArray(getOrCreateData()));
+  return JsonArray(getPool(), variantToArray(getOrCreateData()));
 }
 
 template <typename TDerived>
 template <typename T>
-typename enable_if<is_same<T, ObjectRef>::value, ObjectRef>::type
+typename enable_if<is_same<T, JsonObject>::value, JsonObject>::type
 VariantRefBase<TDerived>::to() const {
-  return ObjectRef(getPool(), variantToObject(getOrCreateData()));
+  return JsonObject(getPool(), variantToObject(getOrCreateData()));
 }
 
 template <typename TDerived>
 template <typename T>
-typename enable_if<is_same<T, VariantRef>::value, VariantRef>::type
+typename enable_if<is_same<T, JsonVariant>::value, JsonVariant>::type
 VariantRefBase<TDerived>::to() const {
   variantSetNull(getOrCreateData());
   return *this;
 }
 
-// Out of class definition to avoid #1560
 template <typename TDerived>
-inline bool VariantRefBase<TDerived>::set(char value) const {
-  return set(static_cast<signed char>(value));
-}
-
-template <typename TDerived>
-inline void convertToJson(const VariantRefBase<TDerived>& src, VariantRef dst) {
-  dst.set(src.template as<VariantConstRef>());
+inline void convertToJson(const VariantRefBase<TDerived>& src,
+                          JsonVariant dst) {
+  dst.set(src.template as<JsonVariantConst>());
 }
 
 }  // namespace ARDUINOJSON_NAMESPACE

@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include <ArduinoJson/Variant/JsonVariant.hpp>
 #include <ArduinoJson/Variant/SlotFunctions.hpp>
-#include <ArduinoJson/Variant/VariantRef.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
@@ -13,47 +13,47 @@ class VariantPtr {
  public:
   VariantPtr(MemoryPool* pool, VariantData* data) : _variant(pool, data) {}
 
-  VariantRef* operator->() {
+  JsonVariant* operator->() {
     return &_variant;
   }
 
-  VariantRef& operator*() {
+  JsonVariant& operator*() {
     return _variant;
   }
 
  private:
-  VariantRef _variant;
+  JsonVariant _variant;
 };
 
-class ArrayIterator {
-  friend class ArrayRef;
+class JsonArrayIterator {
+  friend class JsonArray;
 
  public:
-  ArrayIterator() : _slot(0) {}
-  explicit ArrayIterator(MemoryPool* pool, VariantSlot* slot)
+  JsonArrayIterator() : _slot(0) {}
+  explicit JsonArrayIterator(MemoryPool* pool, VariantSlot* slot)
       : _pool(pool), _slot(slot) {}
 
-  VariantRef operator*() const {
-    return VariantRef(_pool, _slot->data());
+  JsonVariant operator*() const {
+    return JsonVariant(_pool, _slot->data());
   }
   VariantPtr operator->() {
     return VariantPtr(_pool, _slot->data());
   }
 
-  bool operator==(const ArrayIterator& other) const {
+  bool operator==(const JsonArrayIterator& other) const {
     return _slot == other._slot;
   }
 
-  bool operator!=(const ArrayIterator& other) const {
+  bool operator!=(const JsonArrayIterator& other) const {
     return _slot != other._slot;
   }
 
-  ArrayIterator& operator++() {
+  JsonArrayIterator& operator++() {
     _slot = _slot->next();
     return *this;
   }
 
-  ArrayIterator& operator+=(size_t distance) {
+  JsonArrayIterator& operator+=(size_t distance) {
     _slot = _slot->next(distance);
     return *this;
   }
@@ -67,46 +67,46 @@ class VariantConstPtr {
  public:
   VariantConstPtr(const VariantData* data) : _variant(data) {}
 
-  VariantConstRef* operator->() {
+  JsonVariantConst* operator->() {
     return &_variant;
   }
 
-  VariantConstRef& operator*() {
+  JsonVariantConst& operator*() {
     return _variant;
   }
 
  private:
-  VariantConstRef _variant;
+  JsonVariantConst _variant;
 };
 
-class ArrayConstRefIterator {
-  friend class ArrayRef;
+class JsonArrayConstIterator {
+  friend class JsonArray;
 
  public:
-  ArrayConstRefIterator() : _slot(0) {}
-  explicit ArrayConstRefIterator(const VariantSlot* slot) : _slot(slot) {}
+  JsonArrayConstIterator() : _slot(0) {}
+  explicit JsonArrayConstIterator(const VariantSlot* slot) : _slot(slot) {}
 
-  VariantConstRef operator*() const {
-    return VariantConstRef(_slot->data());
+  JsonVariantConst operator*() const {
+    return JsonVariantConst(_slot->data());
   }
   VariantConstPtr operator->() {
     return VariantConstPtr(_slot->data());
   }
 
-  bool operator==(const ArrayConstRefIterator& other) const {
+  bool operator==(const JsonArrayConstIterator& other) const {
     return _slot == other._slot;
   }
 
-  bool operator!=(const ArrayConstRefIterator& other) const {
+  bool operator!=(const JsonArrayConstIterator& other) const {
     return _slot != other._slot;
   }
 
-  ArrayConstRefIterator& operator++() {
+  JsonArrayConstIterator& operator++() {
     _slot = _slot->next();
     return *this;
   }
 
-  ArrayConstRefIterator& operator+=(size_t distance) {
+  JsonArrayConstIterator& operator+=(size_t distance) {
     _slot = _slot->next(distance);
     return *this;
   }

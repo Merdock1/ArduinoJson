@@ -13,6 +13,10 @@
 
 namespace ARDUINOJSON_NAMESPACE {
 
+template <typename T>
+struct IsChar
+    : integral_constant<bool, is_integral<T>::value && sizeof(T) == 1> {};
+
 class ZeroTerminatedRamString {
  public:
   static const size_t typeSortKey = 3;
@@ -49,7 +53,7 @@ class ZeroTerminatedRamString {
     return stringCompare(a, b) == 0;
   }
 
-  StringStoragePolicy::Copy storagePolicy() {
+  StringStoragePolicy::Copy storagePolicy() const {
     return StringStoragePolicy::Copy();
   }
 
@@ -58,7 +62,7 @@ class ZeroTerminatedRamString {
 };
 
 template <typename TChar>
-struct StringAdapter<TChar*, typename enable_if<sizeof(TChar) == 1>::type> {
+struct StringAdapter<TChar*, typename enable_if<IsChar<TChar>::value>::type> {
   typedef ZeroTerminatedRamString AdaptedString;
 
   static AdaptedString adapt(const TChar* p) {
@@ -67,7 +71,7 @@ struct StringAdapter<TChar*, typename enable_if<sizeof(TChar) == 1>::type> {
 };
 
 template <typename TChar, size_t N>
-struct StringAdapter<TChar[N], typename enable_if<sizeof(TChar) == 1>::type> {
+struct StringAdapter<TChar[N], typename enable_if<IsChar<TChar>::value>::type> {
   typedef ZeroTerminatedRamString AdaptedString;
 
   static AdaptedString adapt(const TChar* p) {
@@ -79,7 +83,7 @@ class StaticStringAdapter : public ZeroTerminatedRamString {
  public:
   StaticStringAdapter(const char* str) : ZeroTerminatedRamString(str) {}
 
-  StringStoragePolicy::Link storagePolicy() {
+  StringStoragePolicy::Link storagePolicy() const {
     return StringStoragePolicy::Link();
   }
 };
@@ -117,7 +121,7 @@ class SizedRamString {
     return _str;
   }
 
-  StringStoragePolicy::Copy storagePolicy() {
+  StringStoragePolicy::Copy storagePolicy() const {
     return StringStoragePolicy::Copy();
   }
 
@@ -128,7 +132,7 @@ class SizedRamString {
 
 template <typename TChar>
 struct SizedStringAdapter<TChar*,
-                          typename enable_if<sizeof(TChar) == 1>::type> {
+                          typename enable_if<IsChar<TChar>::value>::type> {
   typedef SizedRamString AdaptedString;
 
   static AdaptedString adapt(const TChar* p, size_t n) {
