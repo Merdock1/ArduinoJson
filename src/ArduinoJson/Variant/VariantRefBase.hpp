@@ -1,5 +1,5 @@
 // ArduinoJson - https://arduinojson.org
-// Copyright © 2014-2022, Benoit BLANCHON
+// Copyright © 2014-2023, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -10,10 +10,11 @@
 #include <ArduinoJson/Variant/VariantOperators.hpp>
 #include <ArduinoJson/Variant/VariantTo.hpp>
 
-namespace ARDUINOJSON_NAMESPACE {
-
+ARDUINOJSON_BEGIN_PUBLIC_NAMESPACE
 class JsonVariant;
+ARDUINOJSON_END_PUBLIC_NAMESPACE
 
+ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 template <typename>
 class ElementProxy;
 
@@ -46,11 +47,9 @@ class VariantRefBase : public VariantTag {
   // Casts the value to the specified type.
   // https://arduinojson.org/v6/api/jsonvariant/as/
   template <typename T>
-  FORCE_INLINE typename enable_if<!is_same<T, char*>::value &&
-                                      !is_same<T, char>::value &&
-                                      !ConverterNeedsWriteableRef<T>::value,
-                                  T>::type
-  as() const {
+  FORCE_INLINE
+      typename enable_if<!ConverterNeedsWriteableRef<T>::value, T>::type
+      as() const {
     return Converter<T>::fromJson(getVariantConst());
   }
 
@@ -58,11 +57,10 @@ class VariantRefBase : public VariantTag {
   // https://arduinojson.org/v6/api/jsonvariant/as/
   template <typename T>
   FORCE_INLINE typename enable_if<ConverterNeedsWriteableRef<T>::value, T>::type
-  as() const {
-    return Converter<T>::fromJson(getVariant());
-  }
+  as() const;
 
-  template <typename T>
+  template <typename T,
+            typename = typename enable_if<!is_same<T, TDerived>::value>::type>
   FORCE_INLINE operator T() const {
     return as<T>();
   }
@@ -92,24 +90,20 @@ class VariantRefBase : public VariantTag {
   template <typename T>
   FORCE_INLINE
       typename enable_if<ConverterNeedsWriteableRef<T>::value, bool>::type
-      is() const {
-    return Converter<T>::checkJson(getVariant());
-  }
+      is() const;
 
   // Returns true if the value is of the specified type.
   // https://arduinojson.org/v6/api/jsonvariant/is/
   template <typename T>
-  FORCE_INLINE typename enable_if<!ConverterNeedsWriteableRef<T>::value &&
-                                      !is_same<T, char*>::value &&
-                                      !is_same<T, char>::value,
-                                  bool>::type
-  is() const {
+  FORCE_INLINE
+      typename enable_if<!ConverterNeedsWriteableRef<T>::value, bool>::type
+      is() const {
     return Converter<T>::checkJson(getVariantConst());
   }
 
   // Shallow copies the specified value.
   // https://arduinojson.org/v6/api/jsonvariant/shallowcopy/
-  FORCE_INLINE void shallowCopy(JsonVariantConst target) {
+  FORCE_INLINE void shallowCopy(ArduinoJson::JsonVariantConst target) {
     VariantData* data = getOrCreateData();
     if (!data)
       return;
@@ -123,20 +117,12 @@ class VariantRefBase : public VariantTag {
   // Copies the specified value.
   // https://arduinojson.org/v6/api/jsonvariant/set/
   template <typename T>
-  FORCE_INLINE bool set(const T& value) const {
-    Converter<T>::toJson(value, getOrCreateVariant());
-    MemoryPool* pool = getPool();
-    return pool && !pool->overflowed();
-  }
+  FORCE_INLINE bool set(const T& value) const;
 
   // Copies the specified value.
   // https://arduinojson.org/v6/api/jsonvariant/set/
   template <typename T>
-  FORCE_INLINE bool set(T* value) const {
-    Converter<T*>::toJson(value, getOrCreateVariant());
-    MemoryPool* pool = getPool();
-    return pool && !pool->overflowed();
-  }
+  FORCE_INLINE bool set(T* value) const;
 
   // Returns the size of the array or object.
   // https://arduinojson.org/v6/api/jsonvariant/size/
@@ -235,14 +221,14 @@ class VariantRefBase : public VariantTag {
   // https://arduinojson.org/v6/api/jsonvariant/subscript/
   template <typename TString>
   FORCE_INLINE typename enable_if<IsString<TString>::value,
-                                  MemberProxy<TDerived, TString> >::type
+                                  MemberProxy<TDerived, TString>>::type
   operator[](const TString& key) const;
 
   // Gets or sets an object member.
   // https://arduinojson.org/v6/api/jsonvariant/subscript/
   template <typename TChar>
   FORCE_INLINE typename enable_if<IsString<TChar*>::value,
-                                  MemberProxy<TDerived, TChar*> >::type
+                                  MemberProxy<TDerived, TChar*>>::type
   operator[](TChar* key) const;
 
   // Creates an array and adds it to the object.
@@ -287,13 +273,13 @@ class VariantRefBase : public VariantTag {
   }
 
  private:
-  FORCE_INLINE JsonVariant getVariant() const;
+  FORCE_INLINE ArduinoJson::JsonVariant getVariant() const;
 
-  FORCE_INLINE JsonVariantConst getVariantConst() const {
-    return JsonVariantConst(getData());
+  FORCE_INLINE ArduinoJson::JsonVariantConst getVariantConst() const {
+    return ArduinoJson::JsonVariantConst(getData());
   }
 
-  FORCE_INLINE JsonVariant getOrCreateVariant() const;
+  FORCE_INLINE ArduinoJson::JsonVariant getOrCreateVariant() const;
 };
 
-}  // namespace ARDUINOJSON_NAMESPACE
+ARDUINOJSON_END_PRIVATE_NAMESPACE

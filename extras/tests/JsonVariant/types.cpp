@@ -1,5 +1,5 @@
 // ArduinoJson - https://arduinojson.org
-// Copyright © 2014-2022, Benoit BLANCHON
+// Copyright © 2014-2023, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -139,6 +139,13 @@ TEST_CASE("JsonVariant set()/get()") {
 TEST_CASE("volatile") {
   DynamicJsonDocument doc(4096);
   JsonVariant variant = doc.to<JsonVariant>();
+
+  SECTION("volatile bool") {  // issue #2029
+    volatile bool f = true;
+    variant.set(f);
+    CHECK(variant.is<bool>() == true);
+    CHECK(variant.as<bool>() == true);
+  }
 
   SECTION("volatile int") {
     volatile int f = 42;

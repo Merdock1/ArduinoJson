@@ -28,16 +28,11 @@ jobs:
   gcc:
     name: GCC
     needs: lint
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         include:
-          - gcc: "4.4"
-          - gcc: "4.6"
-          - gcc: "4.7"
-          - gcc: "4.8"
-          - gcc: "4.9"
           - gcc: "5"
           - gcc: "6"
           - gcc: "7"
@@ -52,9 +47,9 @@ jobs:
     steps:
       - name: Install
         run: |
-          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ trusty main universe'
-          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ xenial main universe'
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5 3B4FE6ACC0B21F32
           sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ bionic main universe'
+          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ focal main universe'
           sudo apt-get update
           sudo apt-get install -y gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
       - name: Checkout
@@ -84,12 +79,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - clang: "3.5"
-            cxxflags: "-stdlib=libc++"
-          - clang: "3.6"
-            cxxflags: "-stdlib=libc++"
-          - clang: "3.7"
-            cxxflags: "-stdlib=libc++"
           - clang: "3.8"
             cxxflags: "-stdlib=libc++"
           - clang: "3.9"
@@ -108,8 +97,6 @@ jobs:
     steps:
       - name: Install
         run: |
-          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ trusty main'
-          sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ trusty universe'
           sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ xenial main'
           sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ xenial universe'
           sudo add-apt-repository -yn 'deb http://archive.ubuntu.com/ubuntu/ bionic main'
@@ -145,9 +132,11 @@ jobs:
       - name: Install
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-multilib
+          sudo apt-get install -y g++-multilib gcc-avr avr-libc
       - name: Checkout
         uses: actions/checkout@v3
+      - name: AVR
+        run: avr-g++ -std=c++11 -Isrc extras/conf_test/avr.cpp
       - name: GCC 32-bit
         run: g++ -std=c++11 -m32 -Isrc extras/conf_test/x86.cpp
       - name: GCC 64-bit
